@@ -10,8 +10,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PasswordInput } from "@/components/password-input";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -36,7 +36,7 @@ export function UpdatePasswordForm({
       const { error } = await supabase.auth.updateUser({ password });
       if (error) throw error;
       // Update this route to redirect to an authenticated route. The user already has an active session.
-      router.push("/protected");
+      router.push("/dashboard");
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred");
     } finally {
@@ -45,8 +45,8 @@ export function UpdatePasswordForm({
   };
 
   return (
-    <div className={cn("flex flex-col gap-6", className)} {...props}>
-      <Card>
+    <div className={cn("animate-in fade-in slide-in-from-bottom-3 duration-500 flex flex-col gap-6", className)} {...props}>
+      <Card className="shadow-lg shadow-black/5">
         <CardHeader>
           <CardTitle className="text-2xl">Reset Your Password</CardTitle>
           <CardDescription>
@@ -58,9 +58,8 @@ export function UpdatePasswordForm({
             <div className="flex flex-col gap-6">
               <div className="grid gap-2">
                 <Label htmlFor="password">New password</Label>
-                <Input
+                <PasswordInput
                   id="password"
-                  type="password"
                   placeholder="New password"
                   required
                   value={password}

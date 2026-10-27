@@ -1,10 +1,14 @@
-import { DeployButton } from "@/components/deploy-button";
-import { EnvVarWarning } from "@/components/env-var-warning";
+import { DashboardSidebar } from "@/components/dashboard-sidebar";
 import { AuthButton } from "@/components/auth-button";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { hasEnvVars } from "@/lib/utils";
-import Link from "next/link";
+import { connection } from "next/server";
 import { Suspense } from "react";
+
+async function AuthHeader() {
+  await connection();
+  return <AuthButton />;
+}
 
 export default function ProtectedLayout({
   children,
@@ -12,42 +16,26 @@ export default function ProtectedLayout({
   children: React.ReactNode;
 }) {
   return (
-    <main className="min-h-screen flex flex-col items-center">
-      <div className="flex-1 w-full flex flex-col gap-20 items-center">
-        <nav className="w-full flex justify-center border-b border-b-foreground/10 h-16">
-          <div className="w-full max-w-5xl flex justify-between items-center p-3 px-5 text-sm">
-            <div className="flex gap-5 items-center font-semibold">
-              <Link href={"/"}>Next.js Supabase Starter</Link>
-              <div className="flex items-center gap-2">
-                <DeployButton />
-              </div>
-            </div>
-            {!hasEnvVars ? (
-              <EnvVarWarning />
-            ) : (
-              <Suspense>
-                <AuthButton />
-              </Suspense>
-            )}
+    <main className="min-h-screen bg-muted/20 lg:flex">
+      <DashboardSidebar />
+      <div className="flex min-h-screen min-w-0 flex-1 flex-col">
+        <header className="hidden h-16 items-center justify-end gap-6 border-b bg-background/95 px-6 backdrop-blur lg:flex">
+          {!hasEnvVars ? <p className="mr-4 text-xs text-destructive">Supabase configuration required</p> : null}
+          <div className="flex items-center gap-3 rounded-full border bg-muted/30 py-1 pl-3 pr-1 text-sm text-muted-foreground">
+            <span>Appearance</span>
+            <ThemeSwitcher />
           </div>
-        </nav>
-        <div className="flex-1 flex flex-col gap-20 max-w-5xl p-5">
-          {children}
+          <Suspense>
+            <AuthHeader />
+          </Suspense>
+        </header>
+        <div className="flex-1">
+          <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-8 p-4 sm:p-6 lg:p-8 2xl:px-10">
+            {children}
+          </div>
         </div>
-
-        <footer className="w-full flex items-center justify-center border-t mx-auto text-center text-xs gap-8 py-16">
-          <p>
-            Powered by{" "}
-            <a
-              href="https://supabase.com/?utm_source=create-next-app&utm_medium=template&utm_term=nextjs"
-              target="_blank"
-              className="font-bold hover:underline"
-              rel="noreferrer"
-            >
-              Supabase
-            </a>
-          </p>
-          <ThemeSwitcher />
+        <footer className="flex items-center justify-between border-t px-6 py-5 text-xs text-muted-foreground">
+          <p>Vaultbase · Secure, searchable information management</p>
         </footer>
       </div>
     </main>
