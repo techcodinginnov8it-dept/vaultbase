@@ -12,9 +12,13 @@ The authentication experience includes branded, centered login and registration 
 
 Async actions use visible pending states and disabled submit controls to prevent duplicate submissions. This includes authentication, password reset, profile and collection saves, item creation/editing, collection assignment, attachment deletion, credential updates, and logout.
 
+Item detail pages use a clearly styled dashboard back link. Logout keeps a stable button width, shows a spinner while signing out, reports sign-out errors, and refreshes the session-aware route after completion.
+
 The dashboard defers authenticated Supabase reads behind a Suspense boundary so Next.js can prerender a loading shell and stream user-specific data at request time. Database access requires both RLS policies and explicit authenticated table grants.
 
 Dashboard item detail pages use the same deferred authenticated-data pattern, so user-specific records do not block Next.js prerendering.
+
+Item detail pages use a responsive workspace layout with a prominent item header, type and collection badges, last-updated metadata, summary counts, credential protection section, link cards, tag chips, and attachment previews with clear empty states. The layout expands on larger screens while remaining readable on mobile.
 
 The authenticated application shell uses a responsive sidebar. Desktop users see persistent navigation for Dashboard, Collections, and Settings; mobile users get a collapsible drawer. Item creation is handled by one compact modal button in the Dashboard header to keep the sidebar focused on navigation. The modal has an explicit Add to collection selector and a quick Create and select collection action for users who need to organize a new item immediately. The quick collection form supports name, optional description, type, and custom type. Collection detail pages also provide an Add item button with the current collection preselected; the quick-create collection action is hidden there to prevent accidentally creating a separate collection while already working inside one. Collections are now functional: users can create collections, assign items to them, view collection item counts, and browse collection contents.
 

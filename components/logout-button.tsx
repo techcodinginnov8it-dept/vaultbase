@@ -17,12 +17,30 @@ export function LogoutButton() {
     const supabase = createClient();
     const { error } = await supabase.auth.signOut();
     if (error) {
+      showAuthToast(`Unable to log out: ${error.message}`);
       setIsLoading(false);
       return;
     }
     showAuthToast("You have been logged out successfully.");
-    router.push("/auth/login");
+    router.replace("/auth/login");
+    router.refresh();
   };
 
-  return <Button onClick={logout} disabled={isLoading}>{isLoading ? <><Loader2 className="animate-spin" /> Logging out...</> : "Logout"}</Button>;
+  return (
+    <Button
+      onClick={logout}
+      disabled={isLoading}
+      className="min-w-[92px]"
+      aria-busy={isLoading}
+    >
+      {isLoading ? (
+        <>
+          <Loader2 className="animate-spin" aria-hidden="true" />
+          Logging out...
+        </>
+      ) : (
+        "Logout"
+      )}
+    </Button>
+  );
 }
