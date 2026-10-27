@@ -24,6 +24,8 @@ The authenticated application shell uses a responsive sidebar. Desktop users see
 
 Create Item uses one action flow with a visible pending state, inline validation/upload errors, and client navigation after a successful save. This keeps failed submissions inside the modal instead of exposing a runtime redirect or error overlay.
 
+The Create Item modal uses grouped sections for basic information, organization, details, attachments, and secure credentials. It has a wider responsive layout, helper text, examples, a scrollable form, and a sticky action footer so long forms remain easy to complete on desktop and mobile.
+
 The authenticated shell uses a wider responsive content canvas up to 1600px on large screens, while individual detail views keep their own readable max-widths.
 
 Authenticated Supabase session checks use a request-time connection in the shared auth helper and the header uses a Suspense boundary, so auth time-dependent values do not run during prerendering on Dashboard, Collections, Item Detail, and Settings routes.

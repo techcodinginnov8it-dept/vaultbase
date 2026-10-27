@@ -1,6 +1,6 @@
 "use client";
 
-import { Eye, EyeOff, Plus, X } from "lucide-react";
+import { Eye, EyeOff, FilePlus2, FolderPlus, Link2, Paperclip, Plus, ShieldCheck, X } from "lucide-react";
 import { useActionState, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -106,75 +106,76 @@ export function NewItemDialog({ defaultCollectionId, buttonLabel = "New item" }:
       {open ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <button className="absolute inset-0 bg-black/50 backdrop-blur-sm" aria-label="Close new item dialog" onClick={() => setOpen(false)} />
-          <div role="dialog" aria-modal="true" aria-labelledby="new-item-title" className="relative z-10 flex max-h-[calc(100vh-2rem)] w-full max-w-lg flex-col overflow-hidden rounded-xl border bg-card shadow-2xl animate-in fade-in zoom-in-95 duration-200 sm:max-h-[calc(100vh-4rem)]">
+          <div role="dialog" aria-modal="true" aria-labelledby="new-item-title" aria-describedby="new-item-description" className="relative z-10 flex max-h-[calc(100vh-2rem)] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border bg-card shadow-2xl animate-in fade-in zoom-in-95 duration-200 sm:max-h-[calc(100vh-4rem)]">
             <Button variant="ghost" size="icon" aria-label="Close" className="absolute right-3 top-3" onClick={() => setOpen(false)}>
               <X />
             </Button>
-            <div className="shrink-0 border-b p-5 pr-16 sm:p-6 sm:pr-16">
-              <h2 id="new-item-title" className="text-xl font-semibold">Create new item</h2>
-              <p className="mt-1 text-sm text-muted-foreground">Save a contact, account, project, bookmark, or note.</p>
-            </div>
-            <form action={formAction} className="min-h-0 flex-1 overflow-y-auto p-5 sm:p-6">
-              <div className="flex flex-col gap-4">
-              <input name="title" required maxLength={200} placeholder="Title" className="h-10 rounded-md border bg-background px-3 text-sm" />
-              <select name="item_type" value={itemType} onChange={(event) => setItemType(event.target.value)} className="h-10 rounded-md border bg-background px-3 text-sm">
-                <option value="custom">Custom</option>
-                <option value="contact">Contact</option>
-                <option value="account">Account</option>
-                <option value="project">Project</option>
-                <option value="bookmark">Bookmark</option>
-              </select>
-              {itemType === "custom" ? <input name="custom_item_type" required maxLength={100} placeholder="Custom item type (e.g. API credential)" className="h-10 rounded-md border bg-background px-3 text-sm" /> : null}
-              <label className="flex flex-col gap-2 text-sm font-medium">
-                Add to collection
-                <select name="collection_id" value={selectedCollectionId} onChange={(event) => setSelectedCollectionId(event.target.value)} className="h-10 rounded-md border bg-background px-3 text-sm font-normal">
-                  <option value="">No collection</option>
-                  {collections.map((collection) => <option key={collection.id} value={collection.id}>{collection.name}</option>)}
-                </select>
-                {!defaultCollectionId ? <>
-                  {!showCreateCollection ? <Button type="button" variant="ghost" className="w-fit px-0 text-primary hover:bg-transparent hover:underline" onClick={() => setShowCreateCollection(true)}>+ Create new collection</Button> : (
-                    <div className="flex flex-col gap-3 rounded-lg border bg-muted/30 p-3">
-                      <p className="text-sm font-medium">New collection</p>
-                      <input value={newCollectionName} onChange={(event) => setNewCollectionName(event.target.value)} maxLength={100} placeholder="Collection name" className="h-10 rounded-md border bg-background px-3 text-sm font-normal" />
-                      <textarea value={newCollectionDescription} onChange={(event) => setNewCollectionDescription(event.target.value)} maxLength={500} rows={3} placeholder="Description (optional)" className="rounded-md border bg-background px-3 py-2 text-sm font-normal" />
-                      <select value={newCollectionType} onChange={(event) => setNewCollectionType(event.target.value)} className="h-10 rounded-md border bg-background px-3 text-sm font-normal">
-                        <option value="general">General</option><option value="work">Work</option><option value="personal">Personal</option><option value="finance">Finance</option><option value="projects">Projects</option><option value="bookmarks">Bookmarks</option><option value="other">Other</option>
-                      </select>
-                      {newCollectionType === "other" ? <input value={newCustomType} onChange={(event) => setNewCustomType(event.target.value)} maxLength={50} placeholder="Custom collection type" className="h-10 rounded-md border bg-background px-3 text-sm font-normal" /> : null}
-                      {collectionError ? <p role="alert" className="text-sm text-destructive">{collectionError}</p> : null}
-                      <div className="flex gap-2"><Button type="button" size="sm" disabled={isCreatingCollection || !newCollectionName.trim()} onClick={submitCollection}>{isCreatingCollection ? "Creating..." : "Create and select"}</Button><Button type="button" size="sm" variant="ghost" onClick={() => { setShowCreateCollection(false); setCollectionError(null); }}>Cancel</Button></div>
-                    </div>
-                  )}
-                </> : null}
-              </label>
-              <textarea name="description" placeholder="Description or notes" rows={4} className="rounded-md border bg-background px-3 py-2 text-sm" />
-              <textarea name="urls" rows={3} placeholder="Links (one URL per line)" className="rounded-md border bg-background px-3 py-2 text-sm" />
-              <input name="tags" placeholder="Tags, separated by commas" className="h-10 rounded-md border bg-background px-3 text-sm" />
-              <label className="flex flex-col gap-2 text-sm font-medium">
-                Attach files
-                <input name="attachments" type="file" multiple accept="image/*,video/*,application/pdf,text/plain,text/csv" className="h-auto rounded-md border bg-background px-3 py-2 text-sm file:mr-3 file:rounded-md file:border-0 file:bg-muted file:px-3 file:py-1 file:text-sm" />
-                <span className="text-xs font-normal text-muted-foreground">Images up to 10 MB, videos up to 100 MB, and documents up to 25 MB.</span>
-              </label>
-              <div className="rounded-lg border bg-muted/30 p-4">
-                <p className="font-medium">Credentials (optional)</p>
-                <p className="mt-1 text-xs leading-5 text-muted-foreground">Your password is encrypted in your browser. The vault passphrase is never sent to the server.</p>
-                <div className="mt-4 flex flex-col gap-4">
-                  <input name="credential_username" placeholder="Username or email" className="h-10 rounded-md border bg-background px-3 text-sm" />
-                  <div className="relative">
-                    <input name="credential_password" type={showPassword ? "text" : "password"} placeholder="Password" className="h-10 w-full rounded-md border bg-background px-3 pr-10 text-sm" />
-                    <Button type="button" variant="ghost" size="icon" aria-label={showPassword ? "Hide password" : "Show password"} className="absolute right-0 top-0 text-muted-foreground" onClick={() => setShowPassword((visible) => !visible)}>
-                      {showPassword ? <EyeOff /> : <Eye />}
-                    </Button>
-                  </div>
-                  <input name="vault_passphrase" type="password" placeholder="Vault passphrase (required for password)" className="h-10 rounded-md border bg-background px-3 text-sm" />
+            <div className="shrink-0 border-b bg-gradient-to-br from-primary/[0.08] via-card to-card p-5 pr-16 sm:p-7 sm:pr-16">
+              <div className="flex items-start gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm"><FilePlus2 className="h-5 w-5" /></div>
+                <div>
+                  <h2 id="new-item-title" className="text-xl font-semibold tracking-tight">Create new item</h2>
+                  <p id="new-item-description" className="mt-1 text-sm text-muted-foreground">Save a contact, account, project, bookmark, or note.</p>
                 </div>
               </div>
-              {state.error ? <p role="alert" className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">{state.error}</p> : null}
-              <div className="flex justify-end gap-2 pt-2">
-                <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-                <Button type="submit" disabled={isPending}>{isPending ? "Creating item..." : "Create item"}</Button>
+            </div>
+            <form action={formAction} className="min-h-0 flex-1 overflow-y-auto">
+              <div className="space-y-6 p-5 sm:p-7">
+                <section className="space-y-4">
+                  <div><h3 className="text-sm font-semibold">Basic information</h3><p className="mt-1 text-xs text-muted-foreground">Give this item a clear name and type.</p></div>
+                  <label className="grid gap-2 text-sm font-medium"><span>Title <span className="text-destructive" aria-hidden="true">*</span></span><input name="title" required maxLength={200} placeholder="e.g. Company Gmail account" className="h-11 rounded-lg border bg-background px-3 text-sm font-normal outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20" /></label>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <label className="grid gap-2 text-sm font-medium">Item type<select name="item_type" value={itemType} onChange={(event) => setItemType(event.target.value)} className="h-11 rounded-lg border bg-background px-3 text-sm font-normal outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"><option value="custom">Custom</option><option value="contact">Contact</option><option value="account">Account</option><option value="project">Project</option><option value="bookmark">Bookmark</option></select></label>
+                    {itemType === "custom" ? <label className="grid gap-2 text-sm font-medium"><span>Custom item type <span className="text-destructive" aria-hidden="true">*</span></span><span className="text-xs font-normal text-muted-foreground">For example: API credential or vendor</span><input name="custom_item_type" required maxLength={100} placeholder="Enter a custom type" className="h-11 rounded-lg border bg-background px-3 text-sm font-normal outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20" /></label> : <div className="hidden sm:block" aria-hidden="true" />}
+                  </div>
+                </section>
+
+                <section className="space-y-4 border-t pt-6">
+                  <div className="flex items-start gap-3"><FolderPlus className="mt-0.5 h-5 w-5 text-primary" /><div><h3 className="text-sm font-semibold">Organization</h3><p className="mt-1 text-xs text-muted-foreground">Choose where this item should live.</p></div></div>
+                  <label className="grid gap-2 text-sm font-medium">Collection<select name="collection_id" value={selectedCollectionId} onChange={(event) => setSelectedCollectionId(event.target.value)} className="h-11 rounded-lg border bg-background px-3 text-sm font-normal outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"><option value="">No collection</option>{collections.map((collection) => <option key={collection.id} value={collection.id}>{collection.name}</option>)}</select></label>
+                  {!defaultCollectionId ? (
+                    showCreateCollection ? (
+                      <div className="space-y-4 rounded-xl border bg-muted/30 p-4 sm:p-5">
+                        <div>
+                          <p className="text-sm font-semibold">New collection</p>
+                          <p className="mt-1 text-xs text-muted-foreground">Create a collection and automatically use it for this item.</p>
+                        </div>
+                        <div className="grid gap-4 sm:grid-cols-2">
+                          <label className="grid gap-2 text-sm font-medium">Collection name<input value={newCollectionName} onChange={(event) => setNewCollectionName(event.target.value)} maxLength={100} placeholder="e.g. Work accounts" className="h-10 rounded-lg border bg-background px-3 text-sm font-normal" /></label>
+                          <label className="grid gap-2 text-sm font-medium">Collection type<select value={newCollectionType} onChange={(event) => setNewCollectionType(event.target.value)} className="h-10 w-full rounded-lg border bg-background px-3 text-sm font-normal"><option value="general">General</option><option value="work">Work</option><option value="personal">Personal</option><option value="finance">Finance</option><option value="projects">Projects</option><option value="bookmarks">Bookmarks</option><option value="other">Other</option></select></label>
+                        </div>
+                        <label className="grid gap-2 text-sm font-medium">Description<span className="text-xs font-normal text-muted-foreground">Optional</span><textarea value={newCollectionDescription} onChange={(event) => setNewCollectionDescription(event.target.value)} maxLength={500} rows={2} placeholder="What belongs in this collection?" className="rounded-lg border bg-background px-3 py-2 text-sm font-normal" /></label>
+                        {newCollectionType === "other" ? <label className="grid gap-2 text-sm font-medium">Custom type<input value={newCustomType} onChange={(event) => setNewCustomType(event.target.value)} maxLength={50} placeholder="Enter a custom collection type" className="h-10 rounded-lg border bg-background px-3 text-sm font-normal" /></label> : null}
+                        {collectionError ? <p role="alert" className="text-sm text-destructive">{collectionError}</p> : null}
+                        <div className="flex flex-col-reverse gap-2 border-t pt-3 sm:flex-row sm:justify-end"><Button type="button" size="sm" disabled={isCreatingCollection || !newCollectionName.trim()} onClick={submitCollection}>{isCreatingCollection ? "Creating..." : "Create and select"}</Button><Button type="button" size="sm" variant="outline" onClick={() => { setShowCreateCollection(false); setCollectionError(null); }}>Cancel</Button></div>
+                      </div>
+                    ) : (
+                      <Button type="button" variant="ghost" className="w-fit px-0 text-primary hover:bg-transparent hover:underline" onClick={() => setShowCreateCollection(true)}><Plus className="h-4 w-4" /> Create new collection</Button>
+                    )
+                  ) : null}
+                </section>
+
+                <section className="space-y-4 border-t pt-6">
+                  <div className="flex items-start gap-3"><Link2 className="mt-0.5 h-5 w-5 text-primary" /><div><h3 className="text-sm font-semibold">Details</h3><p className="mt-1 text-xs text-muted-foreground">Add notes, links, and tags to make this item easy to find.</p></div></div>
+                  <label className="grid gap-2 text-sm font-medium">Description or notes<textarea name="description" placeholder="Add useful context, reminders, or details..." rows={4} className="rounded-lg border bg-background px-3 py-2 text-sm font-normal outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20" /></label>
+                  <label className="grid gap-2 text-sm font-medium">Links<span className="text-xs font-normal text-muted-foreground">One URL per line</span><textarea name="urls" rows={3} placeholder="https://example.com" className="rounded-lg border bg-background px-3 py-2 text-sm font-normal outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20" /></label>
+                  <label className="grid gap-2 text-sm font-medium">Tags<span className="text-xs font-normal text-muted-foreground">Separate multiple tags with commas</span><input name="tags" placeholder="work, important, finance" className="h-11 rounded-lg border bg-background px-3 text-sm font-normal outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20" /></label>
+                </section>
+
+                <section className="space-y-4 border-t pt-6">
+                  <div className="flex items-start gap-3"><Paperclip className="mt-0.5 h-5 w-5 text-primary" /><div><h3 className="text-sm font-semibold">Attachments</h3><p className="mt-1 text-xs text-muted-foreground">Keep related files together with this item.</p></div></div>
+                  <label className="grid gap-2 text-sm font-medium"><span className="sr-only">Attach files</span><input name="attachments" type="file" multiple accept="image/*,video/*,application/pdf,text/plain,text/csv" className="h-auto rounded-lg border bg-background px-3 py-2 text-sm file:mr-3 file:rounded-md file:border-0 file:bg-muted file:px-3 file:py-1 file:text-sm" /><span className="text-xs font-normal text-muted-foreground">Images up to 10 MB, videos up to 100 MB, and documents up to 25 MB.</span></label>
+                </section>
+
+                <section className="space-y-4 rounded-xl border bg-muted/30 p-4 sm:p-5">
+                  <div className="flex items-start gap-3"><ShieldCheck className="mt-0.5 h-5 w-5 text-emerald-600" /><div><h3 className="text-sm font-semibold">Secure credentials <span className="font-normal text-muted-foreground">(optional)</span></h3><p className="mt-1 text-xs leading-5 text-muted-foreground">Your password is encrypted in your browser. The vault passphrase is never sent to the server.</p></div></div>
+                  <div className="grid gap-4 sm:grid-cols-2"><label className="grid gap-2 text-sm font-medium">Username or email<input name="credential_username" placeholder="name@example.com" className="h-11 rounded-lg border bg-background px-3 text-sm font-normal" /></label><label className="grid gap-2 text-sm font-medium">Password<div className="relative"><input name="credential_password" type={showPassword ? "text" : "password"} placeholder="Enter password" className="h-11 w-full rounded-lg border bg-background px-3 pr-10 text-sm font-normal" /><Button type="button" variant="ghost" size="icon" aria-label={showPassword ? "Hide password" : "Show password"} className="absolute right-0 top-1 text-muted-foreground" onClick={() => setShowPassword((visible) => !visible)}>{showPassword ? <EyeOff /> : <Eye />}</Button></div></label></div>
+                  <label className="grid gap-2 text-sm font-medium">Vault passphrase<span className="text-xs font-normal text-muted-foreground">Required only when a password is provided</span><input name="vault_passphrase" type="password" placeholder="Create or enter your vault passphrase" className="h-11 rounded-lg border bg-background px-3 text-sm font-normal" /></label>
+                </section>
+
+                {state.error ? <p role="alert" className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">{state.error}</p> : null}
               </div>
-              </div>
+              <div className="sticky bottom-0 flex justify-end gap-2 border-t bg-card/95 px-5 py-4 backdrop-blur sm:px-7"><Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button><Button type="submit" disabled={isPending}>{isPending ? "Creating item..." : "Create item"}</Button></div>
             </form>
           </div>
         </div>
