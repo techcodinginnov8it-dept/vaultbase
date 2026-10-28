@@ -33,8 +33,8 @@ export function RepeatableLinksEditor({ initialLinks = [] }: { initialLinks?: It
     <div className="grid gap-3">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-sm font-medium">Links</p>
-          <p className="text-xs font-normal text-muted-foreground">Add as many labeled URLs as you need.</p>
+          <p className="text-left text-sm font-medium">Links</p>
+          <p className="text-left text-xs font-normal text-muted-foreground">Add as many labeled URLs as you need.</p>
         </div>
         <Button type="button" variant="outline" size="sm" className="shrink-0 gap-1.5" onClick={() => setRows((current) => [...current, newRow()])}>
           <Plus className="h-4 w-4" /> Add another link

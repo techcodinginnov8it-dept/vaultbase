@@ -2,28 +2,27 @@
 
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
 import { showAuthToast } from "@/components/auth-toast";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
 
 export function LogoutButton() {
-  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
   const logout = async () => {
     if (isLoading) return;
     setIsLoading(true);
     const supabase = createClient();
-    const { error } = await supabase.auth.signOut();
+    // Clear the current browser session immediately. This avoids waiting for
+    // the global session-revocation request on slower production networks.
+    const { error } = await supabase.auth.signOut({ scope: "local" });
     if (error) {
       showAuthToast(`Unable to log out: ${error.message}`);
       setIsLoading(false);
       return;
     }
     showAuthToast("You have been logged out successfully.");
-    router.replace("/auth/login");
-    router.refresh();
+    window.location.replace("/auth/login");
   };
 
   return (

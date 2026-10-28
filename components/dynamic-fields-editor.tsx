@@ -43,8 +43,8 @@ export function DynamicFieldsEditor({ itemType, initialFields = [] }: DynamicFie
     <section className="space-y-4 rounded-xl border bg-muted/20 p-4 sm:p-5">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h3 className="text-sm font-semibold">Additional fields <span className="font-normal text-muted-foreground">(optional)</span></h3>
-          <p className="mt-1 text-xs leading-5 text-muted-foreground">Add safe details specific to this item type. Do not store passwords, tokens, or secret keys here.</p>
+          <h3 className="text-left text-sm font-semibold">Additional fields <span className="font-normal text-muted-foreground">(optional)</span></h3>
+          <p className="mt-1 text-left text-xs leading-5 text-muted-foreground">Add safe details specific to this item type. Do not store passwords, tokens, or secret keys here.</p>
         </div>
         <Button type="button" variant="outline" size="sm" className="shrink-0 gap-1.5" onClick={() => setFields((current) => [...current, newField()])} disabled={fields.length >= 30}>
           <Plus className="h-4 w-4" /> Add field

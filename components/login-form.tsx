@@ -22,13 +22,14 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
 
   const handleLogin = async (event: React.SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (isLoading) return;
     setIsLoading(true);
     setError(null);
     try {
-      const { error: signInError } = await createClient().auth.signInWithPassword({ email, password });
+      const { error: signInError } = await createClient().auth.signInWithPassword({ email: email.trim().toLowerCase(), password });
       if (signInError) throw signInError;
       showAuthToast("Signed in successfully.");
-      router.push("/protected");
+      router.replace("/dashboard");
     } catch (caught: unknown) {
       setError(caught instanceof Error ? caught.message : "An error occurred");
     } finally {
