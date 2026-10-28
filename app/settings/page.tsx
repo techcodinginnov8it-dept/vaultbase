@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { Suspense } from "react";
+import { CheckCircle2, LockKeyhole, Settings2, ShieldCheck } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { FormSubmitButton } from "@/components/form-submit-button";
+import { ProfileForm } from "@/components/profile-form";
 import { requireUserId } from "@/lib/auth";
 import { updateProfile } from "./actions";
 
@@ -15,44 +16,27 @@ async function SettingsContent({ searchParams }: SettingsPageProps) {
   const { saved } = await searchParams;
   const [{ data: claims }, { data: profile }] = await Promise.all([
     supabase.auth.getClaims(),
-    supabase.from("profiles").select("display_name").eq("id", userId).maybeSingle(),
+    supabase.from("profiles").select("display_name, avatar_path").eq("id", userId).maybeSingle(),
   ]);
+  const { data: avatarData } = profile?.avatar_path ? await supabase.storage.from("profile-images").createSignedUrl(profile.avatar_path, 600) : { data: null };
 
   const email = typeof claims?.claims?.email === "string" ? claims.claims.email : "";
 
   return (
-    <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-8 animate-in fade-in duration-500">
-      <div>
-        <p className="text-sm text-muted-foreground">Account preferences</p>
-        <h1 className="mt-1 text-3xl font-semibold tracking-tight">Settings</h1>
-        <p className="mt-2 text-muted-foreground">Manage your profile and Vaultbase preferences.</p>
+    <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-7 animate-in fade-in duration-500">
+      <div className="flex flex-col gap-5 rounded-3xl border bg-gradient-to-br from-primary/[0.08] via-card to-card p-6 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:p-8">
+        <div className="flex items-center gap-4 sm:gap-5"><span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary shadow-sm"><Settings2 className="h-7 w-7" /></span><div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Account preferences</p><h1 className="mt-1 text-3xl font-semibold tracking-tight sm:text-4xl">Settings</h1><p className="mt-2 text-sm text-muted-foreground">Manage your profile and Vaultbase preferences.</p></div></div>
+        <div className="flex items-center gap-2 rounded-full border bg-background/70 px-3 py-2 text-xs text-muted-foreground"><ShieldCheck className="h-4 w-4 text-emerald-600" />Account protected</div>
       </div>
 
-      {saved === "1" ? <p className="rounded-md border border-emerald-300 bg-emerald-50 p-3 text-sm text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-300">Your profile was updated.</p> : null}
+      {saved === "1" ? <p className="flex items-center gap-2 rounded-2xl border border-emerald-300 bg-emerald-50 p-4 text-sm text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-300"><CheckCircle2 className="h-4 w-4" />Your profile was updated successfully.</p> : null}
 
-      <section className="rounded-lg border bg-card p-6 shadow-sm">
-        <h2 className="text-xl font-medium">Profile</h2>
-        <p className="mt-1 text-sm text-muted-foreground">This information is shown only inside your account.</p>
-        <form action={updateProfile} className="mt-6 flex w-full max-w-2xl flex-col gap-4">
-          <label className="flex flex-col gap-2 text-sm font-medium">
-            Email
-            <input value={email} readOnly className="h-10 rounded-md border bg-muted px-3 text-sm text-muted-foreground" />
-          </label>
-          <label className="flex flex-col gap-2 text-sm font-medium">
-            Display name
-            <input name="display_name" defaultValue={profile?.display_name ?? ""} maxLength={100} placeholder="Your name" className="h-10 rounded-md border bg-background px-3 text-sm" />
-          </label>
-          <div>
-            <FormSubmitButton pendingLabel="Saving profile...">Save profile</FormSubmitButton>
-          </div>
-        </form>
+      <section className="rounded-3xl border bg-card p-5 shadow-sm sm:p-7">
+        <ProfileForm email={email} initialName={profile?.display_name ?? ""} initialAvatarUrl={avatarData?.signedUrl} action={updateProfile} />
       </section>
 
-      <section className="flex flex-col items-start justify-between gap-5 rounded-lg border bg-card p-6 shadow-sm sm:flex-row sm:items-center">
-        <div>
-          <h2 className="text-xl font-medium">Security</h2>
-          <p className="mt-1 text-sm text-muted-foreground">Reset your password through a secure email link.</p>
-        </div>
+      <section className="flex flex-col items-start justify-between gap-5 rounded-3xl border bg-card p-5 shadow-sm sm:flex-row sm:items-center sm:p-7">
+        <div className="flex items-start gap-3"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600"><LockKeyhole className="h-5 w-5" /></span><div><h2 className="text-xl font-semibold">Security</h2><p className="mt-1 text-sm text-muted-foreground">Reset your password through a secure email link.</p></div></div>
         <Button asChild variant="outline">
           <Link href="/auth/forgot-password">Reset password</Link>
         </Button>

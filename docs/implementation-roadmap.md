@@ -22,9 +22,10 @@ The first vertical slice is now implemented in the repository:
 - Recent items now support assigning, moving, or removing an existing item from a collection.
 - The main Dashboard list now shows only unassigned items; assigned items are shown inside their Collection.
 - Collections now support server-side search by name and description.
-- Optional encrypted credentials are now supported with a vault passphrase, masked password display, reveal, and copy actions. Apply supabase/migrations/003_item_credentials.sql before using this feature.
+- Optional encrypted credentials are now supported as one credential set per item, with a vault passphrase, masked password display, reveal, and copy actions. Multiple accounts should be separate items in the same collection. Apply supabase/migrations/003_item_credentials.sql before using this feature.
 - Custom item type labels are supported when creating items. Apply `006_custom_item_types.sql` before using this field.
-- Private image, video, and document attachments are supported from both Create new item and Edit item. Existing files can be deleted from the item detail page. Apply `007_item_attachments.sql` and `008_data_integrity_hardening.sql` before using uploads.
+- Predefined item types now include Note, Document, Task, Event, Subscription, and Vendor, with dynamic starter fields and an explicit Create new item type option. Apply `009_add_predefined_item_types.sql` before using the new types.
+- Private image, video, and document attachments are supported from both Create new item and Edit item. The forms now show local previews, allow individual removal before saving, validate file limits in the browser, upload bytes directly from the browser to private Supabase Storage, register only small metadata through Server Actions, and show per-file upload status while saving. New-item attachment registration rolls back the newly created item if registration fails. Existing files can be deleted from the item detail page. Apply `007_item_attachments.sql` and `008_data_integrity_hardening.sql` before using uploads.
 - Collections are now functional with create, list, item-count, and collection-detail views. Settings remains planned.
 - Collections now support a type dropdown (`General`, `Work`, `Personal`, `Finance`, `Projects`, or `Bookmarks`) stored by migration `004_collection_types.sql` and displayed in collection views.
 - Collection creation now includes an `Other` option with a custom type input, stored with the validation from `005_custom_collection_types.sql`.
@@ -37,8 +38,10 @@ The first vertical slice is now implemented in the repository:
 - Settings now shares the protected sidebar layout and centers its content consistently across screen sizes.
 - Item detail pages now defer authenticated reads behind Suspense, matching the dashboard and collection routes.
 - Item detail pages now include an edit modal for title, type, collection, description, multiple URLs, tags, and new attachments. Credential editing is a separate unlock-and-re-encrypt security flow for username/email and password.
+- Create and Edit Item now use repeatable labeled link rows with an Add another link action instead of a plain multi-line URL field. The server still accepts legacy URL values for compatibility.
+- Item type fields now use the hybrid schema from `013_item_type_fields.sql`: system and user-owned item types, reusable field definitions, and per-item field values. The existing `structured_data` JSON remains as a compatibility fallback, so older items continue to display and edit safely.
 
-The migrations must be applied to the Supabase project before the dashboard can read or write data, in filename order. The follow-up grants migration is required when the initial schema was created through the SQL Editor.
+The migrations must be applied to the Supabase project before the dashboard can read or write data, in filename order. The follow-up grants migration is required when the initial schema was created through the SQL Editor. Apply `013_item_type_fields.sql` before creating or editing items with the normalized field model.
 
 The local app also requires a `.env.local` file based on `.env.example`. This file is intentionally not committed because it contains project configuration.
 
@@ -118,7 +121,7 @@ Status: initial URL, tags, and title/description search implemented. The current
 
 ## Phase 5: File uploads
 
-Status: private attachment upload, preview, add-on-edit, and owner-checked deletion implemented. Resumable uploads, file-signature validation, cleanup transactions, and advanced media processing remain.
+Status: private direct-to-Storage attachment upload, preview, add-on-edit, metadata registration, cleanup, and owner-checked deletion implemented. Resumable uploads, file-signature validation, and advanced media processing remain.
 
 - Create a private Storage bucket.
 - Add Storage RLS policies.

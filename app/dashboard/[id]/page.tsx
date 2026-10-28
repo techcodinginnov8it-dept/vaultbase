@@ -17,13 +17,14 @@ import { BackToDashboardLink } from "@/components/back-to-dashboard-link";
 import { DeleteAttachmentButton } from "@/components/delete-attachment-button";
 import { EditItemDialog } from "@/components/edit-item-dialog";
 import { requireUserId } from "@/lib/auth";
+import { parseDynamicFields, parseNormalizedFields } from "@/lib/item-fields";
 
 async function ItemContent({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const { supabase, userId } = await requireUserId();
   const { data: item, error } = await supabase
     .from("items")
-    .select("id, title, item_type, custom_type, collection_id, description, updated_at, created_at, collections(name), item_links(url, label), item_tags(tags(name, color)), item_credentials(encrypted_payload, salt, iv), attachments(id, storage_path, original_name, mime_type, size_bytes)")
+    .select("id, title, item_type, custom_type, collection_id, description, structured_data, updated_at, created_at, collections(name), item_links(id, url, label), item_tags(tags(name, color)), item_credentials(encrypted_payload, salt, iv), item_field_values(value_text, item_field_definitions(label, field_type, field_key)), attachments(id, storage_path, original_name, mime_type, size_bytes)")
     .eq("id", id)
     .eq("owner_id", userId)
     .single();
@@ -34,8 +35,15 @@ async function ItemContent({ params }: { params: Promise<{ id: string }> }) {
     const { data } = await supabase.storage.from("item-attachments").createSignedUrl(attachment.storage_path, 600);
     return { ...attachment, signedUrl: data?.signedUrl ?? null };
   }));
-  const initialUrls = item.item_links?.map((link) => link.url) ?? [];
-  const initialTags = (item.item_tags ?? []).flatMap((relation) => relation.tags?.[0]?.name ? [relation.tags[0].name] : []).join(", ");
+  const initialLinks = item.item_links?.map((link) => ({ label: link.label ?? "", url: link.url })) ?? [];
+  const getTag = (relation: (typeof item.item_tags)[number]) => Array.isArray(relation.tags) ? relation.tags[0] : relation.tags;
+  const initialTags = (item.item_tags ?? []).flatMap((relation) => {
+    const tag = getTag(relation);
+    return tag?.name ? [tag.name] : [];
+  }).join(", ");
+  const dynamicFields = parseNormalizedFields(item.item_field_values).length
+    ? parseNormalizedFields(item.item_field_values)
+    : parseDynamicFields(item.structured_data);
   const itemType = item.custom_type || item.item_type;
   const collectionName = item.collections?.[0]?.name;
   const hasCredential = Boolean(credential?.encrypted_payload && credential.salt && credential.iv);
@@ -73,7 +81,7 @@ async function ItemContent({ params }: { params: Promise<{ id: string }> }) {
               {item.description ? <p className="max-w-3xl whitespace-pre-wrap text-sm leading-6 text-muted-foreground sm:text-base">{item.description}</p> : <p className="text-sm italic text-muted-foreground">No description added yet.</p>}
             </div>
             <div className="shrink-0">
-              <EditItemDialog id={item.id} title={item.title} itemType={item.item_type} customType={item.custom_type} collectionId={item.collection_id} description={item.description} urls={initialUrls} tags={initialTags} hasCredentials={hasCredential} />
+              <EditItemDialog id={item.id} title={item.title} itemType={item.item_type} customType={item.custom_type} collectionId={item.collection_id} description={item.description} links={initialLinks} tags={initialTags} dynamicFields={dynamicFields} hasCredentials={hasCredential} attachments={attachments.map((attachment) => ({ id: attachment.id, originalName: attachment.original_name, mimeType: attachment.mime_type, sizeBytes: attachment.size_bytes }))} />
             </div>
           </div>
         </div>
@@ -97,19 +105,21 @@ async function ItemContent({ params }: { params: Promise<{ id: string }> }) {
             </section>
           ) : null}
 
+          {dynamicFields.length ? <section className="rounded-2xl border bg-card p-5 shadow-sm sm:p-6"><div className="mb-4"><h2 className="font-semibold">Additional fields</h2><p className="mt-1 text-sm text-muted-foreground">Extra details saved for this item type</p></div><div className="grid gap-3 sm:grid-cols-2">{dynamicFields.map((field) => <div key={field.id} className="rounded-xl border bg-muted/20 p-3"><p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{field.label}</p><p className="mt-1 break-words text-sm">{field.type === "checkbox" ? (field.value === "true" ? "Yes" : "No") : field.value}</p></div>)}</div></section> : null}
+
           <section className="rounded-2xl border bg-card p-5 shadow-sm sm:p-6">
             <div className="mb-5 flex items-center justify-between gap-4">
               <div className="flex items-center gap-3"><div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500/10 text-blue-600"><Link2 className="h-5 w-5" /></div><div><h2 className="font-semibold">Links</h2><p className="text-sm text-muted-foreground">Websites and references for this item</p></div></div>
               <span className="rounded-full bg-muted px-2.5 py-1 text-xs text-muted-foreground">{item.item_links?.length ?? 0}</span>
             </div>
-            {item.item_links?.length ? <div className="space-y-3">{item.item_links.map((link) => <a key={link.url} href={link.url} target="_blank" rel="noreferrer" className="group flex items-center justify-between gap-4 rounded-xl border bg-muted/20 p-4 transition-colors hover:border-primary/40 hover:bg-muted/50"><span className="min-w-0"><span className="block truncate text-sm font-medium">{link.label || "Saved link"}</span><span className="mt-1 block truncate text-xs text-muted-foreground">{link.url}</span></span><ExternalLink className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" /></a>)}</div> : <div className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground"><Link2 className="mx-auto mb-2 h-5 w-5" />No links added yet.</div>}
+            {item.item_links?.length ? <div className="space-y-3">{item.item_links.map((link) => <a key={link.id} href={link.url} target="_blank" rel="noreferrer" className="group flex items-center justify-between gap-4 rounded-xl border bg-muted/20 p-4 transition-colors hover:border-primary/40 hover:bg-muted/50"><span className="min-w-0"><span className="block truncate text-sm font-medium">{link.label || "Saved link"}</span><span className="mt-1 block truncate text-xs text-muted-foreground">{link.url}</span></span><ExternalLink className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" /></a>)}</div> : <div className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground"><Link2 className="mx-auto mb-2 h-5 w-5" />No links added yet.</div>}
           </section>
         </div>
 
         <div className="space-y-6">
           <section className="rounded-2xl border bg-card p-5 shadow-sm sm:p-6">
             <div className="mb-4 flex items-center gap-3"><div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-500/10 text-violet-600"><Tags className="h-5 w-5" /></div><div><h2 className="font-semibold">Tags</h2><p className="text-sm text-muted-foreground">Ways to find this item</p></div></div>
-            {item.item_tags?.length ? <div className="flex flex-wrap gap-2">{item.item_tags.map((relation) => relation.tags?.[0] ? <span key={relation.tags[0].name} className="rounded-full border bg-muted/40 px-3 py-1.5 text-xs font-medium">{relation.tags[0].name}</span> : null)}</div> : <p className="rounded-xl border border-dashed p-4 text-sm text-muted-foreground">No tags added yet.</p>}
+            {item.item_tags?.length ? <div className="flex flex-wrap gap-2">{item.item_tags.map((relation) => { const tag = getTag(relation); return tag ? <span key={tag.name} className="rounded-full border bg-muted/40 px-3 py-1.5 text-xs font-medium">{tag.name}</span> : null; })}</div> : <p className="rounded-xl border border-dashed p-4 text-sm text-muted-foreground">No tags added yet.</p>}
           </section>
 
           <section className="rounded-2xl border bg-card p-5 shadow-sm sm:p-6">

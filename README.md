@@ -16,7 +16,7 @@ Vaultbase is a private, searchable information workspace for contacts, accounts,
 1. Install dependencies with npm install.
 2. Create .env.local by copying .env.example.
 3. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY from the Supabase project API settings.
-4. Apply the Supabase migrations in filename order: `001_vaultbase_foundation.sql`, `002_authenticated_table_grants.sql`, `003_item_credentials.sql`, `004_collection_types.sql`, `005_custom_collection_types.sql`, `006_custom_item_types.sql`, `007_item_attachments.sql`, and `008_data_integrity_hardening.sql`.
+4. Apply the Supabase migrations in filename order: `001_vaultbase_foundation.sql`, `002_authenticated_table_grants.sql`, `003_item_credentials.sql`, `004_collection_types.sql`, `005_custom_collection_types.sql`, `006_custom_item_types.sql`, `007_item_attachments.sql`, `008_data_integrity_hardening.sql`, `009_add_predefined_item_types.sql`, `010_collection_images.sql`, `011_collection_colors.sql`, `012_profile_images.sql`, and `013_item_type_fields.sql`.
 5. Start the development server with `npm run dev`.
 6. Open http://localhost:3000.
 

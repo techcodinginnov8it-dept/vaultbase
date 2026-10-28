@@ -3,6 +3,7 @@
 import { Search, X } from "lucide-react";
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { predefinedCollectionTypes } from "@/lib/collection-types";
 
 type CollectionSearchProps = {
   initialQuery: string;
@@ -60,12 +61,7 @@ export function CollectionSearch({ initialQuery, initialType }: CollectionSearch
         className="h-10 rounded-md border bg-background px-3 text-sm sm:w-40"
       >
         <option value="">All types</option>
-        <option value="general">General</option>
-        <option value="work">Work</option>
-        <option value="personal">Personal</option>
-        <option value="finance">Finance</option>
-        <option value="projects">Projects</option>
-        <option value="bookmarks">Bookmarks</option>
+        {predefinedCollectionTypes.map((value) => <option key={value} value={value}>{value.charAt(0).toUpperCase() + value.slice(1)}</option>)}
         <option value="custom">Custom types</option>
       </select>
       <span className="sr-only" aria-live="polite">

@@ -5,6 +5,8 @@ import { useState } from "react";
 
 import { updateCollection } from "@/app/dashboard/collection-actions";
 import { CollectionTypeField } from "@/components/collection-type-field";
+import { CollectionImagePicker } from "@/components/collection-image-picker";
+import { CollectionColorField } from "@/components/collection-color-field";
 import { Button } from "@/components/ui/button";
 import { FormSubmitButton } from "@/components/form-submit-button";
 
@@ -13,9 +15,11 @@ type EditCollectionDialogProps = {
   name: string;
   type: string;
   description: string | null;
+  imageUrl?: string | null;
+  color?: string;
 };
 
-export function EditCollectionDialog({ id, name, type, description }: EditCollectionDialogProps) {
+export function EditCollectionDialog({ id, name, type, description, imageUrl, color }: EditCollectionDialogProps) {
   const [open, setOpen] = useState(false);
 
   async function submit(formData: FormData) {
@@ -51,6 +55,8 @@ export function EditCollectionDialog({ id, name, type, description }: EditCollec
                 Description
                 <textarea name="description" maxLength={500} rows={4} defaultValue={description ?? ""} placeholder="Optional description" className="rounded-md border bg-background px-3 py-2 text-sm font-normal" />
               </label>
+              <CollectionColorField initialColor={color} />
+              <CollectionImagePicker currentImageUrl={imageUrl} allowRemove />
               <div className="flex justify-end gap-2 pt-2">
                 <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
                 <FormSubmitButton pendingLabel="Saving changes...">Save changes</FormSubmitButton>

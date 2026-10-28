@@ -74,13 +74,13 @@ export function DashboardSidebar() {
 
   return (
     <>
-      <aside className="hidden h-screen w-64 shrink-0 border-r bg-card lg:block">
+      <aside className="hidden h-full w-64 shrink-0 overflow-y-auto border-r bg-card lg:block">
         <Suspense fallback={<SidebarFallback />}>
           <SidebarContent />
         </Suspense>
       </aside>
 
-      <div className="sticky top-0 z-30 flex h-16 items-center border-b bg-background/95 px-4 backdrop-blur lg:hidden">
+      <div className="z-30 flex h-16 shrink-0 items-center border-b bg-background/95 px-4 backdrop-blur lg:hidden">
         <Button variant="ghost" size="icon" aria-label="Open navigation" onClick={() => setOpen(true)}>
           <Menu />
         </Button>

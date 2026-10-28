@@ -82,7 +82,7 @@ export function CredentialViewer({ itemId, encryptedPayload, salt, iv }: Credent
       </div>
       {!credentials ? (
         <form onSubmit={unlock} className="mt-4 flex flex-col gap-3">
-          <p className="text-sm text-muted-foreground">Unlock this credential with your vault passphrase.</p>
+          <p className="text-sm text-muted-foreground">Unlock the single credential set for this item with your vault passphrase. Store another account as a separate item in the same collection.</p>
           <div className="flex gap-2">
             <input type="password" required value={passphrase} onChange={(event) => setPassphrase(event.target.value)} placeholder="Vault passphrase" className="h-10 flex-1 rounded-md border bg-background px-3 text-sm" />
             <Button type="submit" disabled={isUnlocking}><LockKeyhole /> {isUnlocking ? "Unlocking..." : "Unlock"}</Button>

@@ -4,11 +4,11 @@
 
 Vaultbase should be a private, searchable information workspace. A user can create records, attach files, save URLs, add notes, and organize everything with tags and collections.
 
-Implementation note: the first slice currently supports user-owned items, one initial URL, tags, collections, title/description search, and private image/video/document attachments. The current search implementation only queries item titles and descriptions; link/tag search is planned. Attachments use a private Supabase Storage bucket with user-scoped paths and RLS-protected metadata.
+Implementation note: the current slice supports user-owned items, multiple labeled URLs, tags, collections, title/description search, and private image/video/document attachments. The current search implementation only queries item titles and descriptions; link/tag search is planned. Attachments use a private Supabase Storage bucket with user-scoped paths and RLS-protected metadata.
 
-The public shell and authenticated navigation use consistent Vaultbase branding, including the `V` icon in the landing-page and dashboard headers; starter-template tutorial and deployment UI has been removed.
+The public shell and authenticated navigation use consistent Vaultbase branding, including the `V` icon in the landing-page and dashboard headers; starter-template tutorial and deployment UI has been removed. The landing-page auth controls explicitly opt into request-time rendering because Supabase session reads depend on request cookies and must not be evaluated during static prerendering.
 
-The authentication experience includes branded, centered login and registration cards, a soft responsive background treatment, password visibility toggles, animated transitions, loading/error states, success toasts for sign-in, sign-up, and logout, and a post-signup confirmation screen with a direct Gmail link. Email confirmation remains required before normal sign-in.
+The authentication experience includes branded, centered login and registration cards, a soft responsive background treatment, password visibility toggles, animated transitions, loading/error states, success toasts for sign-in, sign-up, and logout, and a post-signup confirmation screen with a direct Gmail link. Email confirmation remains required before normal sign-in. Credential creation also provides a visibility toggle for the local-only vault passphrase, which is removed before the server action runs.
 
 Async actions use visible pending states and disabled submit controls to prevent duplicate submissions. This includes authentication, password reset, profile and collection saves, item creation/editing, collection assignment, attachment deletion, credential updates, and logout.
 
@@ -18,19 +18,27 @@ The dashboard defers authenticated Supabase reads behind a Suspense boundary so 
 
 Dashboard item detail pages use the same deferred authenticated-data pattern, so user-specific records do not block Next.js prerendering.
 
-Item detail pages use a responsive workspace layout with a prominent item header, type and collection badges, last-updated metadata, summary counts, credential protection section, link cards, tag chips, and attachment previews with clear empty states. The layout expands on larger screens while remaining readable on mobile.
+Item detail pages use a responsive workspace layout with a prominent item header, type and collection badges, last-updated metadata, summary counts, credential protection section, link cards, tag chips, and attachment previews with clear empty states. Tag rendering supports Supabase's nested relationship response shape so saved tag names remain visible. The layout expands on larger screens while remaining readable on mobile.
 
-The authenticated application shell uses a responsive sidebar. Desktop users see persistent navigation for Dashboard, Collections, and Settings; mobile users get a collapsible drawer. Item creation is handled by one compact modal button in the Dashboard header to keep the sidebar focused on navigation. The modal has an explicit Add to collection selector and a quick Create and select collection action for users who need to organize a new item immediately. The quick collection form supports name, optional description, type, and custom type. Collection detail pages also provide an Add item button with the current collection preselected; the quick-create collection action is hidden there to prevent accidentally creating a separate collection while already working inside one. Collections are now functional: users can create collections, assign items to them, view collection item counts, and browse collection contents.
+The authenticated application shell uses a responsive sidebar. Desktop users see persistent navigation for Dashboard, Collections, and Settings; mobile users get a collapsible drawer. Item creation is handled by one compact modal button in the Dashboard header when items already exist; the empty dashboard uses one `Create your first item` call to action instead of showing duplicate create buttons. The modal has an explicit Add to collection selector and a quick Create and select collection action for users who need to organize a new item immediately. The quick collection form supports name, optional description, type, and custom type. Collection detail pages also provide an Add item button with the current collection preselected; the quick-create collection action is hidden there to prevent accidentally creating a separate collection while already working inside one. Collections are now functional: users can create collections, assign items to them, view collection item counts, and browse collection contents. Settings uses a responsive profile hero, grouped profile/security cards, a combined profile identity row with the image beside the saved name, separate pencil actions for changing the image or name, private upload/preview/removal, responsive inputs, and visible success feedback while preserving the existing profile-save and password-reset flows.
 
-Create Item uses one action flow with a visible pending state, inline validation/upload errors, and client navigation after a successful save. This keeps failed submissions inside the modal instead of exposing a runtime redirect or error overlay.
+Create Item and Edit Item use responsive, scrollable dialogs with visible pending states, inline validation/upload errors, grouped sections, and sticky action footers. Edit Item pre-fills saved title, type, collection, description, links, tags, dynamic fields, and existing attachment names; encrypted credentials remain protected behind the credential unlock flow. Create Item preserves the entered draft when an action fails, including selected attachment previews, and navigates only after a successful save. This keeps failed submissions inside the modal instead of exposing a runtime redirect or error overlay.
 
-The Create Item modal uses grouped sections for basic information, organization, details, attachments, and secure credentials. It has a wider responsive layout, helper text, examples, a scrollable form, and a sticky action footer so long forms remain easy to complete on desktop and mobile.
+Successful item navigation is guarded so returning from a newly created item does not replay the previous redirect and send the user back to the same item.
 
-The authenticated shell uses a wider responsive content canvas up to 1600px on large screens, while individual detail views keep their own readable max-widths.
+The Create Item modal uses grouped sections for basic information, organization, details, attachments, and secure credentials. It has a wider responsive layout, helper text, examples, a scrollable form, and a sticky action footer so long forms remain easy to complete on desktop and mobile. Links use repeatable labeled rows, attachments show local previews with per-file removal before submission, and client-side file validation gives immediate feedback. Attachment bytes now upload directly from the browser to the private Supabase Storage bucket; the Server Action receives only small metadata, avoiding the Next.js 1 MB Server Action body limit. The modal supports Escape-to-close, initial focus on the close control, collection-loading errors, rollback when initial attachment registration fails, and a clear per-file upload status while saving.
+
+Item types now provide dynamic type-specific fields. Account, Contact, Project, Bookmark, Note, Document, Task, Event, Subscription, and Vendor types show useful starter fields, while users can add, edit, and remove additional fields with text, email, URL, number, date, or yes/no values. The normalized field model is stored in `item_types`, `item_field_definitions`, and `item_field_values`; `items.structured_data` remains as a backward-compatible fallback for records created before migration `013_item_type_fields.sql`. Database triggers also verify that field definitions and values belong to the same owner and item type. Passwords remain in the encrypted credentials flow and are intentionally excluded from custom fields.
+
+Selecting `Custom` resets predefined starter fields and shows the custom item type label plus a blank additional-field area. The system does not guess a schema from labels such as `API credential` or `Vendor`; users explicitly add the fields they need. When switching between types, user-added fields are preserved while starter fields from the previous type are removed.
+
+The item type dropdown includes icons, short descriptions, and an explicit `Create new item type…` option, which uses the `custom` value and reveals the custom item type input only after the user selects it. New items default to `Contact` so the custom type field does not appear unnecessarily; existing custom items still show their saved custom label during editing. Migration `009_add_predefined_item_types.sql` expands the database constraint for the predefined types.
+
+The authenticated shell uses a wider responsive content canvas up to 1600px on large screens, while individual detail views keep their own readable max-widths. The shell is locked to the viewport height: the desktop sidebar and header remain fixed, and only the main content region scrolls. On mobile, the compact navigation header remains fixed while the content region scrolls independently.
 
 Authenticated Supabase session checks use a request-time connection in the shared auth helper and the header uses a Suspense boundary, so auth time-dependent values do not run during prerendering on Dashboard, Collections, Item Detail, and Settings routes.
 
-Recent item cards also provide an Add to collection or Move collection action, allowing an existing item to be organized without opening the item detail page.
+The Dashboard uses a focused hero header, private-workspace status chips, a prominent search panel, and a grouped Recent items workspace. The workspace header separates the section label, main title, supporting description, and item count, while the content area contains the cards or empty state. Recent items are displayed as responsive cards with type icons and badges, descriptions, link previews, collection metadata, updated dates, and a clear open-item affordance. Each card also provides an Add to collection or Move collection action, allowing an existing item to be organized without opening the item detail page. The assignment dialog is rendered above the page content, shows collection loading and save errors inline, supports Escape-to-close, and refreshes the dashboard after a successful assignment.
 
 Sidebar active-state matching is section-aware: Dashboard remains active for item detail pages, while Collections is highlighted for both the collection list and collection detail pages.
 
@@ -110,7 +118,7 @@ Suggested fields:
 - `created_at`
 - `updated_at`
 
-The `structured_data` field allows the first version to support custom fields without creating a new database table for every possible use case. Frequently queried fields should eventually become normal typed columns.
+The `structured_data` field remains available for compatibility and flexible application metadata. Type-specific fields use the normalized `item_types`, `item_field_definitions`, and `item_field_values` tables so definitions can be indexed, validated, and extended without creating a separate database or table for every item type. The application reads normalized values first and falls back to `structured_data` for older records.
 
 ### item_links
 
@@ -125,7 +133,7 @@ Suggested fields:
 - `notes`
 - `created_at`
 
-URLs should be validated and normalized before saving. The application should allow `https://` links and reject unsafe protocols such as `javascript:`.
+URLs should be validated and normalized before saving. The application should allow `https://` links and reject unsafe protocols such as `javascript:`. Link lists use each link's database ID as the UI key, so duplicate URLs remain supported without React key collisions.
 
 ### attachments
 
@@ -172,7 +180,7 @@ Passwords require special treatment:
 - If Vaultbase must store third-party credentials, treat that as a separate password-manager feature.
 - The safer long-term design is client-side encryption using Web Crypto, with the encryption key unavailable to the server. This requires careful recovery and device-management design.
 
-The current release supports optional encrypted credentials on an item. Users can save account names, usernames, emails, login URLs, notes, and an encrypted username/password payload.
+The current release supports one optional encrypted credential set per item. Users can save one username/email and password payload for an item. The database enforces this with a unique `item_credentials.item_id` constraint. If a user needs multiple accounts, each account should be a separate item in the same collection; this keeps search, editing, permissions, and auditing clear.
 
 The credential flow is: search for an account by safe metadata (for example, Facebook or AWS), open the account item, enter the vault passphrase, and reveal or copy the password only after an intentional user action. The password itself is never indexed in search, logged, or stored in plain text. The browser derives an AES-GCM encryption key from the vault passphrase; the passphrase is never sent to Supabase and is not stored by the application.
 
@@ -206,7 +214,15 @@ Current implementation scope: search currently covers only items.title and items
 
 Collections have a debounced live search for collection name and description plus a type dropdown filter. Results update as the user types or changes the type, while filtering remains server-side, ownership-scoped, and handled through the authenticated user's Supabase query. New collections use a type dropdown for quick visual organization, with an `Other` option that reveals a validated custom type input; the selected type is shown on the collection list and detail page. The search has a clear button and keeps the current query and type in the URL for refresh and sharing within the user's session.
 
-Collection detail pages use a clearly styled back button with an arrow icon so users can easily return to the collection list. An Edit collection button beside Add item opens a modal for updating the collection name, type, and description.
+The Collections page uses responsive cards with collection type badges, descriptions, item counts, and an open-collection affordance. A collection overview section summarizes the owner’s total collections by predefined or custom type; each summary card links to the matching type filter. The page uses grouped, responsive panels so the overview remains readable instead of compressing every type into one row. Collection creation is launched from a prominent button in a modal instead of occupying a permanent side panel, keeping the page focused on browsing and search.
+
+Collections support an optional private custom image. Cards and collection detail pages use a short-lived signed URL for the uploaded image and fall back to the folder icon when no image is set. Users can replace or remove the image from Edit Collection. Apply `010_collection_images.sql` before using collection images.
+
+Collections also support a validated preset folder color. Users can change the color from Create Collection or Edit Collection. Predefined collection types now include General, Work, Personal, Finance, Projects, Bookmarks, Reading, Media, Travel, Learning, Health, and Shopping, each with a matching icon; custom types use a fallback icon. Deleting a collection requires confirmation, removes the collection and its private image, but keeps its items and sets their collection to null through the existing foreign-key behavior. Apply `011_collection_colors.sql` before using custom colors.
+
+Collection cards also provide a three-dot quick-action menu for changing the folder color or deleting the collection without opening it. The delete action confirms first and preserves the collection's items.
+
+Collection detail pages use a clearly styled back button with an arrow icon so users can easily return to the collection list. The collection header now uses a focused hero card with the collection icon/image, type badge, description, item count, item-type count, and last-updated date. Items are shown as responsive cards with clear open-item affordances, while empty collections show a guided first-item state. An Edit collection button beside Add item opens a modal for updating the collection name, type, and description.
 
 Collection creation uses an inline action state so validation and duplicate-name errors appear inside the form without exposing a Next.js runtime error overlay. The long Create new item form uses a responsive, scrollable modal body so credentials and attachments remain usable on small screens.
 
