@@ -16,7 +16,7 @@ import { PasswordInput } from "@/components/password-input";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { UserRoundPlus } from "lucide-react";
+import { ArrowLeft, UserRoundPlus } from "lucide-react";
 import { showAuthToast } from "@/components/auth-toast";
 
 export function SignUpForm({
@@ -62,6 +62,10 @@ export function SignUpForm({
 
   return (
     <div className={cn("animate-in fade-in slide-in-from-bottom-3 duration-500 flex flex-col gap-6", className)} {...props}>
+      <Link href="/" className="inline-flex w-fit items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
+        <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+        Back to Vaultbase
+      </Link>
       <Card className="rounded-2xl border-border/70 bg-card/95 shadow-xl shadow-black/10 backdrop-blur">
         <CardHeader className="items-center space-y-4 pb-5 text-center">
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-lg font-semibold text-primary-foreground shadow-lg shadow-primary/20">
